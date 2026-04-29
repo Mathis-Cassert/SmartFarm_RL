@@ -1,18 +1,13 @@
 AgroManagement:
-    Site:
-        latitude: 52
-        longitude: 5
-        year: 1987
-    SoilCalendar:
-        soil_name: washington
-        soil_variation: washington_1
-        soil_start_date: 1987-01-01
-        soil_end_date: 1987-12-01
+- &id001 1987-01-01:
     CropCalendar:
-        crop_name: grape
-        crop_variety: Chardonnay
-        crop_start_date: 1987-01-01
-        crop_start_type: endodorm
-        crop_end_date: 1987-10-01
-        crop_end_type: max_duration
-        max_duration: 365
+      crop_end_date: 1987-10-01
+      crop_end_type: harvest
+      crop_name: grape
+      crop_start_date: *id001
+      crop_start_type: endodorm
+      max_duration: 365
+      variety_name: Chardonnay
+    StateEvents: null
+    TimedEvents: null
+Version: '1.0'
