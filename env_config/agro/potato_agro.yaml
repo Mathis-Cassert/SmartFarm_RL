@@ -1,0 +1,19 @@
+AgroManagement:
+    Site:
+        latitude: 50
+        longitude: 5
+        year: 2010
+    SoilCalendar:
+        soil_name: oregon
+        soil_variation: oregon_3
+        soil_start_date: 2010-01-01
+        soil_end_date: 2010-12-01
+    CropCalendar:
+        crop_name: potato
+        crop_variety: potato_1
+        crop_start_date: 2010-01-01
+        crop_start_type: sowing
+        crop_end_date: 2010-07-01
+        crop_end_type: max_duration
+        max_duration: 365
+

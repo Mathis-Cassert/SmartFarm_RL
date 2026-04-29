@@ -1,0 +1,39 @@
+# An overview of how to create a new agromanagement file for use in the WOFOST simulator
+
+1. To create a new agromanagement file, copy the template below into a `<file_name>.yaml` file
+in the current directory
+2. Fill out all fields marked with angle brackets `< >` 
+3. Latitude, Longitude, and Year specify the historical weather to be drawn from
+the NASA Power historical database. Ensure that 1984 <= year <= 2018 to avoid
+missing data. Latitude must be in (-90, 90) and Longitude must be in (-180, 180)
+4. Ensure that `<crop_name>` is registered in [this file](../crop/crops.yaml)
+5. Ensure that `<soil_name>` is registered in [this file](../soil/soils.yaml)
+6. Ensure that `<crop_variety>` is a valid variety in the `<crop_name>.yaml` file
+6. Ensure that `<soil_variation>` is a valid variation in the `<soil_name>.yaml` file
+7. Ensure that `crop_start_date <= crop_end_date`
+8. To test the agromanagement file with inputted crop and soil, run  
+`python test_wofost.py --agro_fpath <filename>.yaml`
+
+
+````yaml
+<yyyy-mm-dd - datetime>:
+    Site: 
+        LATITUDE: < int >
+        LONGITUDE: < int >
+        YEAR: <int 1994 - 2018>
+    Soil:
+        soil_name: <soil_name>
+        soil_variation: <soil_variety>
+        soil_start_date: <yyyy-mm-dd>
+        soil_end_date: <yyyy-mm-dd>
+    CropCalendar:
+        crop_name: <crop_name>
+        crop_variety: <crop_variety>
+        soil_name: <soil_name>
+        soil_variation: <soil_variation>
+        crop_start_date: <yyyy-mm-dd>
+        crop_start_type: <sowing, emergence>
+        crop_end_date: <yyyy-mm-dd>
+        crop_end_type: <harvest, maturity, death>
+        max_duration: <int>
+````

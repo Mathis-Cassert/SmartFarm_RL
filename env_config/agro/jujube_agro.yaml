@@ -1,0 +1,19 @@
+AgroManagement:
+    Site:   
+        latitude: 40
+        longitude: 5
+        year: 1984
+    SoilCalendar:
+        soil_name: oregon
+        soil_variation: oregon_1
+        soil_start_date: 1985-01-01
+        soil_end_date: 1990-12-01
+    CropCalendar:
+        crop_name: jujube
+        crop_variety: jujube_1
+        crop_start_date: 1985-01-01
+        crop_start_type: sowing
+        crop_end_date: 1990-10-01
+        crop_end_type: max_duration
+        max_duration: 1100
+
