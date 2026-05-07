@@ -163,6 +163,8 @@ class PCSEEnv(gym.Env):
 
         return new_obs, reward, terminated, truncated, {}
 
+    # NOTE: If i implement crop rotation, I need to normalize thanks to max yield (potential production) models.Wofost81_PP
+    #   reward += (final_yield / crop_max_yield) * 100 -> to get a % so everything is relative
     def _calculate_reward(self, water_applied, is_done):
         """
         Custom reward function:
@@ -175,7 +177,6 @@ class PCSEEnv(gym.Env):
 
         if is_done:
             # Yield is represented by TWSO (Total Weight of Storage Organs / Grain)
-            # Or TAGP (Total Aboveground Production)
             final_yield = self.engine.get_variable("TWSO")
             if final_yield is None: final_yield = 0
 

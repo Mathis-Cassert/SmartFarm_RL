@@ -1,5 +1,7 @@
 import os
 
+from configs.save_config import LOG_DIR
+
 NUM_ENVIRONMENTS: int = 1 # Use -1 for automatic detection else use a positive integer
 
 # RecurrentPPO hyperparameters
@@ -24,13 +26,10 @@ TRAINING_CONFIG = {
 
 CHECKPOINT_CONFIG = {
     "save_freq": 5000,
-    "save_path": './logs/',
     "name_prefix": 'rppo_wofost'
 }
 
 EVAL_CONFIG = {
-    "best_model_save_path": './logs/best_model',
-    "log_path": './logs/eval',
     "eval_freq": 2000,
     "n_eval_episodes": 10,
     "deterministic": True,

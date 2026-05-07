@@ -1,8 +1,9 @@
+import pathlib
 import yaml
 
 from pcse.input import YAMLAgroManagementReader, YAMLCropDataProvider, NASAPowerWeatherDataProvider
 from pcse.input import WOFOST81SiteDataProvider_Classic, DummySoilDataProvider
-
+from utils.definition import ROOT_DIR
 
 # Define the providers (crop, weather, soil, site, agro)
 PCSEProviders = tuple[
@@ -50,7 +51,7 @@ class PCSEConfig:
         """
         # Recreate crop only if crop_type changed
         if self._crop is None or self.crop_type != self._last_crop_type:
-            crop_dir = f"env_config/crop/{self.crop_type}"
+            crop_dir: pathlib.Path = ROOT_DIR / f"env_config/crop/{self.crop_type}"
             self._crop = YAMLCropDataProvider(fpath=crop_dir)
             self._last_crop_type = self.crop_type
         
@@ -65,7 +66,7 @@ class PCSEConfig:
         
         # Recreate soil/site only if soil_type changed
         if self._soil is None or self.soil_type != self._last_soil_type:
-            soil_params_file = f"env_config/soil/{self.soil_type}.yaml"
+            soil_params_file: pathlib.Path = ROOT_DIR / f"env_config/soil/{self.soil_type}.yaml"
             with open(soil_params_file, 'r') as f:
                 soil_params = yaml.safe_load(f)
             
@@ -83,7 +84,7 @@ class PCSEConfig:
             self._last_soil_type = self.soil_type
         
         if self._site is None or self.soil_type != self._last_soil_type:
-            soil_params_file = f"env_config/soil/{self.soil_type}.yaml"
+            soil_params_file: pathlib.Path = ROOT_DIR / f"env_config/soil/{self.soil_type}.yaml"
             with open(soil_params_file, 'r') as f:
                 soil_params = yaml.safe_load(f)
             
@@ -105,7 +106,7 @@ class PCSEConfig:
         
         # Recreate agro only if agro_type changed
         if self._agro is None or self.agro_type != self._last_agro_type:
-            agro_file = f"env_config/agro/{self.agro_type}_agro.yaml"
+            agro_file: pathlib.Path = ROOT_DIR / f"env_config/agro/{self.agro_type}_agro.yaml"
             self._agro = YAMLAgroManagementReader(agro_file)
             self._last_agro_type = self.agro_type
         
