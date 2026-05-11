@@ -1,3 +1,4 @@
+import os
 from functools import partial
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,11 +6,14 @@ import pandas as pd
 from sb3_contrib import RecurrentPPO
 
 from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.vec_env import VecNormalize, DummyVecEnv
+from stable_baselines3.common.vec_env import VecNormalize, DummyVecEnv, VecEnv
 
+from configs.gym_obs_act import OBSERVATION_BOUNDS
 from utils.env_factory import make_gym_env
+from utils.observation_process import denormalize_observation
 
-def initiate_eval_model(folder_path: str, verbose: int = 1) -> tuple[BaseAlgorithm, VecNormalize]:
+
+def initiate_eval_model(folder_path: str, verbose: int = 1) -> tuple[BaseAlgorithm, VecEnv]:
     """
     Initiate the evaluation model by loading the environment and model.
     :param folder_path: Path to the folder containing the environment and model files
@@ -23,7 +27,8 @@ def initiate_eval_model(folder_path: str, verbose: int = 1) -> tuple[BaseAlgorit
     eval_env = DummyVecEnv([partial(make_gym_env, verbose=verbose)])
 
     # Load normalization statistics from training to ensure consistent observations
-    eval_env = VecNormalize.load(env_path, eval_env)
+    if os.path.exists(env_path):
+        eval_env = VecNormalize.load(env_path, eval_env)
 
     # Configure environment for evaluation (freeze normalization statistics)
     eval_env.training = False
@@ -35,7 +40,7 @@ def initiate_eval_model(folder_path: str, verbose: int = 1) -> tuple[BaseAlgorit
     return eval_model, eval_env
 
 
-def evaluate_model(model: BaseAlgorithm, env: VecNormalize)\
+def evaluate_model(model: BaseAlgorithm, env: VecEnv)\
         -> tuple[dict[str, list[float]], pd.DataFrame, pd.DataFrame]:
     """
     Evaluates a trained model on a given environment.
@@ -68,7 +73,12 @@ def evaluate_model(model: BaseAlgorithm, env: VecNormalize)\
 
         # Retrieve un-normalized observations for accurate plotting
         # Index [0] extracts single environment from vectorized wrapper
-        real_obs = env.get_original_obs()[0]
+        if isinstance(env, VecNormalize):
+            real_obs = env.get_original_obs()[0]
+        else:
+            real_obs = obs[0]
+
+        real_obs = denormalize_observation(real_obs, OBSERVATION_BOUNDS)
 
         # Extract crop state variables directly from WOFOST engine
         # TWSO: Total weight of storage organs (grain yield)

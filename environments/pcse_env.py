@@ -7,7 +7,7 @@ from pcse.models import Wofost81_WLP_CWB, Wofost81_PP
 from pcse.base import ParameterProvider
 from pcse import signals
 
-from utils.observation_noise import apply_noise
+from utils.observation_process import apply_noise, normalize_observation
 from configs.observation_noise_config import FeatureNoiseConfig, NoiseConfig
 from configs.gym_obs_act import ObservationFeature, OBSERVATION_BOUNDS, ActionFeature, ACTION_BOUNDS
 
@@ -50,10 +50,10 @@ class PCSEEnv(gym.Env):
                                        high=np.array([ACTION_BOUNDS[f][1] for f in ActionFeature]),
                                        shape=(1,), dtype=np.float32)
 
-        # Define Observation Space:
+        # Define Observation Space (normalized to [0, 1])
         self.observation_space = spaces.Box(
-            low=np.array([OBSERVATION_BOUNDS[f][0] for f in ObservationFeature]),
-            high=np.array([OBSERVATION_BOUNDS[f][1] for f in ObservationFeature]),
+            low=np.zeros(len(ObservationFeature), dtype=np.float64),
+            high=np.ones(len(ObservationFeature), dtype=np.float64),
             dtype=np.float64
         )
 
@@ -89,7 +89,6 @@ class PCSEEnv(gym.Env):
         info = {}
         return observation, info
 
-    #TODO: add some noise for more realism
     def _get_obs(self):
         """
         Extracts the current state from the PCSE engine and weather provider.
@@ -126,8 +125,10 @@ class PCSEEnv(gym.Env):
         }
 
         # Apply noise and convert to array
-        obs = apply_noise(obs_dict, self.noise_config, OBSERVATION_BOUNDS)
-        return obs
+        noisy_obs = apply_noise(obs_dict, self.noise_config, OBSERVATION_BOUNDS)
+        # Pre-normalize for stability
+        normalized_obs = normalize_observation(noisy_obs, OBSERVATION_BOUNDS)
+        return normalized_obs
 
     def step(self, action):
         # 1. Translate the Action

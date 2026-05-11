@@ -65,3 +65,27 @@ def apply_noise(
         noisy_obs[idx] += noise
 
     return np.clip(noisy_obs, obs_low, obs_high)
+
+def normalize_observation(observation: np.ndarray,
+                          observation_bounds: Dict[ObservationFeature, tuple[float, float]]) -> np.ndarray:
+    """
+    Normalizes an observation array to the [0, 1] range.
+    :param observation: A numpy array of observations
+    :param observation_bounds: Dict of (low, high) bounds for each feature
+    :returns: Normalized observation as numpy array
+    """
+    obs_low = np.array([observation_bounds[f][0] for f in ObservationFeature], dtype=np.float32)
+    obs_high = np.array([observation_bounds[f][1] for f in ObservationFeature], dtype=np.float32)
+    return (observation - obs_low) / (obs_high - obs_low)
+
+def denormalize_observation(observation: np.ndarray,
+                          observation_bounds: Dict[ObservationFeature, tuple[float, float]]) -> np.ndarray:
+    """
+    De-normalizes an observation array from the [0, 1] range to the original range.
+    :param observation: A numpy array of observations
+    :param observation_bounds: Dict of (low, high) bounds for each feature
+    :returns: De-normalized observation as numpy array
+    """
+    obs_low = np.array([observation_bounds[f][0] for f in ObservationFeature], dtype=np.float32)
+    obs_high = np.array([observation_bounds[f][1] for f in ObservationFeature], dtype=np.float32)
+    return observation * (obs_high - obs_low) + obs_low

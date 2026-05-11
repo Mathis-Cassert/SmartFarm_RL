@@ -10,12 +10,13 @@ from configs.model_config import MODEL_CONFIG, TRAINING_CONFIG, CHECKPOINT_CONFI
 from configs.save_config import LOG_DIR
 
 
-def train_rppo(env: VecEnv, eval_env: VecEnv, verbose: int=1) -> BaseAlgorithm:
+def train_rppo(env: VecEnv, eval_env: VecEnv, time_start: str=None, verbose: int=1) -> BaseAlgorithm:
     """
     Train a RecurrentPPO model on a given environment.
 
     :param env: Environment to train on
     :param eval_env: Environment to evaluate on
+    :param time_start: Start time for logging
     :param verbose: Verbosity level 0: no output, 1: basic output, 2: debug output
     :returns: Trained RecurrentPPO model
     """
@@ -24,8 +25,9 @@ def train_rppo(env: VecEnv, eval_env: VecEnv, verbose: int=1) -> BaseAlgorithm:
     model: BaseAlgorithm = RecurrentPPO(**MODEL_CONFIG, env=env, verbose=verbose)
 
     # Log paths
-    current_time: str = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_folder: pathlib.Path = LOG_DIR / f"{current_time}_{model.__class__.__name__}"
+    if time_start is None:
+        time_start = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_folder: pathlib.Path = LOG_DIR / f"{time_start}_{model.__class__.__name__}"
 
     # Setup callbacks
     checkpoint_callback = CheckpointCallback(
