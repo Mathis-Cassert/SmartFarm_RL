@@ -1,5 +1,5 @@
 import pathlib
-from utils.definition import ROOT_DIR
+from configs.definition import ROOT_DIR
 
 BASE_OUTPUT_DIR: pathlib.Path = ROOT_DIR / "output"
 

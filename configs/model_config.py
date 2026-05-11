@@ -1,7 +1,5 @@
 import os
 
-from configs.save_config import LOG_DIR
-
 NUM_ENVIRONMENTS: int = 1 # Use -1 for automatic detection else use a positive integer
 
 # RecurrentPPO hyperparameters

@@ -2,7 +2,7 @@ from configs.env_config import PCSEConfig
 from environments.pcse_env import PCSEEnv
 
 #TODO: add script for random config w/ ranges (use a config class/file)
-def make_env(config: PCSEConfig = None, verbose: int = 1) -> PCSEEnv:
+def make_gym_env(config: PCSEConfig = None, verbose: int = 1) -> PCSEEnv:
     """
     Creates a PCSE environment with optional configuration
 

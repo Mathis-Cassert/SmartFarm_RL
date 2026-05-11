@@ -1,4 +1,5 @@
-# All units for use in graphing output from the WOFOST Simulator 
+# All units for use in graphing output from the WOFOST Simulator
+#FIXME: Remove duplicate and verify info
 ---  
   #############################################################################**
   # Weather Variable States

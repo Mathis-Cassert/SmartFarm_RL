@@ -7,6 +7,7 @@ from stable_baselines3.common.vec_env import VecNormalize
 from configs.save_config import MODEL_DIR
 
 def save(model: BaseAlgorithm, env: VecNormalize = None) -> None:
+    #FIXME: use the same time as logs (use the tie at beginning of training)
     current_time: str = datetime.now().strftime("%Y%m%d_%H%M%S")
     save_folder: pathlib.Path = MODEL_DIR / f"{current_time}_{model.__class__.__name__}"
     model.save(save_folder / "model")

@@ -1,9 +1,15 @@
 import gymnasium as gym
+import pandas as pd
 from gymnasium import spaces
 import numpy as np
-from pcse.models import Wofost81_WLP_CWB
+
+from pcse.models import Wofost81_WLP_CWB, Wofost81_PP
 from pcse.base import ParameterProvider
 from pcse import signals
+
+from utils.observation_noise import apply_noise
+from configs.observation_noise_config import FeatureNoiseConfig, NoiseConfig
+from configs.gym_obs_act import ObservationFeature, OBSERVATION_BOUNDS, ActionFeature, ACTION_BOUNDS
 
 
 class PCSEEnv(gym.Env):
@@ -19,17 +25,36 @@ class PCSEEnv(gym.Env):
 
         self.verbose = verbose
 
+        self.noise_config = NoiseConfig(
+            enabled=True,
+            feature_configs={
+                ObservationFeature.LAI: FeatureNoiseConfig(noise_type="gaussian", std=0.05),
+                ObservationFeature.TAGP: FeatureNoiseConfig(noise_type="uniform", std=50.0),
+                ObservationFeature.SM: FeatureNoiseConfig(noise_type="gaussian", std=0.02),
+                ObservationFeature.IRRAD: FeatureNoiseConfig(noise_type="gaussian", std=1.0),
+                ObservationFeature.TEMP: FeatureNoiseConfig(noise_type="gaussian", std=0.5),
+                ObservationFeature.VAP: FeatureNoiseConfig(noise_type="uniform", std=2.0),
+                ObservationFeature.CO2: FeatureNoiseConfig(noise_type="none", std=0.0),
+            }
+        )
+
+        #Engine for the RL model to learn and eval engine for the reward calculation/visualization
         self.engine = None
+        self.eval_engine = None
+
+        self.eval_summary = None
+        self.eval_output = None
+
         # Define Action Space: Irrigation amount (0 to 5 cm)
-        self.action_space = spaces.Box(low=0.0, high=5.0, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([ACTION_BOUNDS[f][0] for f in ActionFeature]),
+                                       high=np.array([ACTION_BOUNDS[f][1] for f in ActionFeature]),
+                                       shape=(1,), dtype=np.float32)
 
         # Define Observation Space:
-        # [LAI, TAGP (Biomass), SM (Soil Moisture), IRRAD, TEMP, RELH, CO2]
-        # We use TAGP as a proxy for 'visual height/size' as it's more stable in WOFOST
         self.observation_space = spaces.Box(
-            low=np.array([0, 0, 0, 0, -10, 0, 300]),
-            high=np.array([10, 20000, 1, 40, 50, 100, 1000]),
-            dtype=np.float32
+            low=np.array([OBSERVATION_BOUNDS[f][0] for f in ObservationFeature]),
+            high=np.array([OBSERVATION_BOUNDS[f][1] for f in ObservationFeature]),
+            dtype=np.float64
         )
 
         self._prev_tagp = None
@@ -52,9 +77,10 @@ class PCSEEnv(gym.Env):
             sitedata=self.site_provider
         )
 
-        # 2. Re-initialize the WOFOST Engine
+        # 2. Re-initialize the WOFOST Engine and eval engine
         # This sets the simulation back to the 'sowing date' defined in your agro file
         self.engine = Wofost81_WLP_CWB(params, self.weather_provider, self.agro_management)
+        self.eval_engine = Wofost81_PP(params, self.weather_provider, self.agro_management)
 
         # 3. Get the initial observation
         observation = self._get_obs()
@@ -69,31 +95,39 @@ class PCSEEnv(gym.Env):
         Extracts the current state from the PCSE engine and weather provider.
         """
         # Get crop state
-        # LAI: Leaf Area Index
-        # TAGP: Total Aboveground Production (proxy for growth/size)
-        lai = self.engine.get_variable("LAI")
-        tagp = self.engine.get_variable("TAGP")
+        lai = self.engine.get_variable("LAI")   # LAI: Leaf Area Index
+        tagp = self.engine.get_variable("TAGP") # TAGP: Total Aboveground Production (proxy for growth/size)
 
         # Get soil state
-        # SM: Volumetric Soil Moisture
-        sm = self.engine.get_variable("SM")
+        sm = self.engine.get_variable("SM") # SM: Volumetric Soil Moisture
 
         # Get current weather from the weather provider
         # We ask the engine for its current internal date
         current_date = self.engine.day
         weather_at_date = self.weather_provider(current_date)
 
-        irrad = weather_at_date.IRRAD
+        irrad = weather_at_date.IRRAD #TODO: Maybe lower the value for training current max = 40e6 (divide by 10e3 ?)
         temp = weather_at_date.TEMP
-        relh = weather_at_date.VAP #TODO: either use VAP or find a way to get RH
+        vap = weather_at_date.VAP #TODO: either use VAP or find a way to get RH
 
-        # CO2 is usually a constant in the site parameters or a variable
-        co2 = self.engine.get_variable("CO2")
+        # Get CO2 from site provider (it is a constant)
+        co2 = self.site_provider["CO2"]
 
-        # Combine into a single numpy array for the RL model
-        # We use 'nan_to_num' because at day 0, some variables might be None
-        obs = np.array([lai, tagp, sm, irrad, temp, relh, co2], dtype=np.float32)
-        return np.nan_to_num(obs)
+        # Build observation dict (order-independent)
+        #TODO: Research if float or int in PCSE
+        obs_dict = {
+            ObservationFeature.LAI: float(np.nan_to_num(lai)),
+            ObservationFeature.TAGP: float(np.nan_to_num(tagp)),
+            ObservationFeature.SM: float(np.nan_to_num(sm)),
+            ObservationFeature.IRRAD: float(np.nan_to_num(irrad)),
+            ObservationFeature.TEMP: float(np.nan_to_num(temp)),
+            ObservationFeature.VAP: float(np.nan_to_num(vap)),
+            ObservationFeature.CO2: int(np.nan_to_num(co2)),
+        }
+
+        # Apply noise and convert to array
+        obs = apply_noise(obs_dict, self.noise_config, OBSERVATION_BOUNDS)
+        return obs
 
     def step(self, action):
         # 1. Translate the Action
@@ -132,15 +166,6 @@ class PCSEEnv(gym.Env):
             terminated = True
             if self.verbose >= 2 : print("DEBUG: Crop died (LAI=0 with existing biomass)")
         
-        # Check for natural maturity
-        # try:
-        #     dvs = self.engine.get_variable("DVS")
-        #     if dvs is not None and dvs >= 2.0:
-        #         terminated = True
-        #         if self.verbose >= 2 : print(f"DEBUG: Crop reached natural maturity (DVS={dvs:.2f})")
-        # except:
-        #     pass  # DVS variable might not be available
-        
         # Check if biomass is stagnant (no growth for many days)
         if hasattr(self, '_prev_tagp') and self._prev_tagp is not None:
             if abs(tagp_val - self._prev_tagp) < 1.0:  # Very little growth
@@ -163,8 +188,6 @@ class PCSEEnv(gym.Env):
 
         return new_obs, reward, terminated, truncated, {}
 
-    # NOTE: If i implement crop rotation, I need to normalize thanks to max yield (potential production) models.Wofost81_PP
-    #   reward += (final_yield / crop_max_yield) * 100 -> to get a % so everything is relative
     def _calculate_reward(self, water_applied, is_done):
         """
         Custom reward function:
@@ -176,13 +199,33 @@ class PCSEEnv(gym.Env):
         reward = -(water_applied * 0.1)
 
         if is_done:
+            # get the maximal yield production
+            pp = self._potential_production()
+
             # Yield is represented by TWSO (Total Weight of Storage Organs / Grain)
             final_yield = self.engine.get_variable("TWSO")
             if final_yield is None: final_yield = 0
 
-            # We give a massive reward for the final harvested yield
-            # We might scale it (e.g., yield in kg/ha / 1000)
-            reward += (final_yield / 100.0)
+            # We give a massive reward (0-100) for the final harvested yield (may need to be scaled)
+            pp_reward = (final_yield / pp) * 100
+            reward += pp_reward
+
             if self.verbose >= 2: print(f"DEBUG: Final yield={final_yield:.2f}, Reward={reward:.2f}")
 
         return float(reward)
+
+    def _potential_production(self) -> float:
+        # Get the potential production from the engine
+        self.eval_engine.run_till_terminate()
+        self.eval_summary = self.eval_engine.get_summary_output()
+        self.eval_output = self.eval_engine.get_output()
+        potential_production = self.eval_summary[0].get('TWSO', 0)
+        return potential_production
+
+    def get_eval_outputs(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Returns the output and summary dataframes from the potential production (evaluation) engine.
+        """
+        eval_output_df = pd.DataFrame(self.eval_output).set_index("day")
+        eval_summary_df = pd.DataFrame(self.eval_summary)
+        return eval_output_df, eval_summary_df

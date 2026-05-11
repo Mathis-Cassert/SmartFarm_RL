@@ -1,4 +1,5 @@
-# All units for use in graphing output from the WOFOST Simulator 
+# All units for use in graphing output from the WOFOST Simulator
+#FIXME: Most of those ranges are not correct
 ---  
   #############################################################################**
   # Weather Variable States
@@ -217,11 +218,6 @@
   ACC:    [0,10] # Acclimation rate
   HCR:    [0,10] # Change in acclimation 
 
-  #*############################################################################**
-  # Respiration Dynamics States and Rates
-  #*############################################################################**
-  #*Rate variables:** (For output to observation space):
-  PMRES:   [0,50]    # Potential maintenance respiration rate          
 
   #*############################################################################**
   # Root Dynamics States and Rates
@@ -277,58 +273,45 @@
   #**STATE VARIABLES** (For output to observation space):
   NUPTAKETOTAL:     [0,50]     # Total N uptake by the crop                       
   PUPTAKETOTAL:     [0,50]     # Total P uptake by the crop                        
-  KUPTAKETOTAL:     [0,50]     # Total K uptake by the crop                       
-  NFIXTOTAL:        [0,50]     # Total N fixated by the crop                         
+  KUPTAKETOTAL:     [0,50]     # Total K uptake by the crop
 
-  NDEMANDST:        [0,50]     # N Demand in living stems                         
-  NDEMANDRT:        [0,50]     # N Demand in living roots                         
-  NDEMANDSO:        [0,50]     # N Demand in storage organs                           
+  NDEMANDLV:      [0,50]      # N Demand in living leaves
+  NFIXTOTAL:        [0,50]     # Total N fixated by the crop
+  NDEMANDST:        [0,50]     # N Demand in living stems
+  NDEMANDRT:        [0,50]     # N Demand in living roots
 
-  PDEMANDLV:        [0,50]     # P Demand in living leaves                         
-  PDEMANDST:        [0,50]     # P Demand in living stems                          
-  PDEMANDRT:        [0,50]     # P Demand in living roots                             
-  PDEMANDSO:        [0,50]     # P Demand in storage organs                         
+  NDEMANDSO:        [0,50]     # N Demand in storage organs
+  PDEMANDLV:        [0,50]     # P Demand in living leaves
+  PDEMANDST:        [0,50]     # P Demand in living stems
+  PDEMANDRT:        [0,50]     # P Demand in living roots
 
-  KDEMANDLV:        [0,50]      # K Demand in living leaves                        
-  KDEMANDST:        [0,50]      # K Demand in living stems                         
-  KDEMANDRT:        [0,50]      # K Demand in living roots                          
-  KDEMANDSO:        [0,50]      # K Demand in storage organs                        
+  PDEMANDSO:        [0,50]     # P Demand in storage organs
+  KDEMANDLV:        [0,50]      # K Demand in living leaves
+  KDEMANDST:        [0,50]      # K Demand in living stems
+  KDEMANDRT:        [0,50]      # K Demand in living roots
 
+  KDEMANDSO:        [0,50]      # K Demand in storage organs
   #**RATE VARIABLES** (For output to observation space):
-  RNUPTAKELV:     [0,2]  # Rate of N uptake in leaves                           
-  RNUPTAKEST:     [0,2]  # Rate of N uptake in stems                           
-  RNUPTAKERT:     [0,2]  # Rate of N uptake in roots                            
-  RNUPTAKESO:     [0,2]  # Rate of N uptake in storage organs                   
+  RNUPTAKELV:     [0,2]  # Rate of N uptake in leaves
+  RNUPTAKEST:     [0,2]  # Rate of N uptake in stems
+  RNUPTAKERT:     [0,2]  # Rate of N uptake in roots
 
-  RPUTAKELV:     [0,2]  # Rate of P uptake in leaves                           
-  RPUTAKEST:     [0,2]  # Rate of P uptake in stems                            
-  RPUTAKERT:     [0,2]  # Rate of P uptake in roots                           
-  RPUTAKESO:     [0,2]  # Rate of P uptake in storage organs                  
+  RNUPTAKESO:     [0,2]  # Rate of N uptake in storage organs
+  RPUTAKELV:     [0,2]  # Rate of P uptake in leaves
+  RPUTAKEST:     [0,2]  # Rate of P uptake in stems
+  RPUTAKERT:     [0,2]  # Rate of P uptake in roots
 
-  RKUPTAKELV:     [0,2]  # Rate of K uptake in leaves                          
-  RKUPTAKEST:     [0,2]  # Rate of K uptake in stems                           
-  RKUPTAKERT:     [0,2]  # Rate of K uptake in roots                           
-  RKUPTAKESO:     [0,2]  # Rate of K uptake in storage organs                   
+  RPUTAKESO:     [0,2]  # Rate of P uptake in storage organs
+  RKUPTAKELV:     [0,2]  # Rate of K uptake in leaves
+  RKUPTAKEST:     [0,2]  # Rate of K uptake in stems
+  RKUPTAKERT:     [0,2]  # Rate of K uptake in roots
 
-  RNUPTAKE:       [0,2]  # Total rate of N uptake                               
-  RPUTAKE:        [0,2]  # Total rate of P uptake                               
-  RKUPTAKE:       [0,2]  # Total rate of K uptake                               
-  RNFIXATION:     [0,1]  # Rate of N fixation                                   
+  RKUPTAKESO:     [0,2]  # Rate of K uptake in storage organs
+  RNUPTAKE:       [0,2]  # Total rate of N uptake
+  RPUTAKE:        [0,2]  # Total rate of P uptake
+  RKUPTAKE:       [0,2]  # Total rate of K uptake
 
-  NDEMANDLV:      [0,50]      # N Demand in living leaves                            
-  NDEMANDST:      [0,50]      # N Demand in living stems                           
-  NDEMANDRT:      [0,50]      # N Demand in living roots                            
-  NDEMANDSO:      [0,50]      # N Demand in storage organs                          
-
-  PDEMANDLV:      [0,50]      # P Demand in living leaves                           
-  PDEMANDST:      [0,50]      # P Demand in living stems                            
-  PDEMANDRT:      [0,50]      # P Demand in living roots                            
-  PDEMANDSO:      [0,50]      # P Demand in storage organs                          
-
-  KDEMANDLV:      [0,50]      # K Demand in living leaves                         
-  KDEMANDST:      [0,50]      # K Demand in living stems                            
-  KDEMANDRT:      [0,50]      # K Demand in living roots                            
-  KDEMANDSO:      [0,50]      # K Demand in storage organs                          
+  RNFIXATION:     [0,1]  # Rate of N fixation
 
   NDEMAND:        [0,50]  # Total crop N demand                                 
   PDEMAND:        [0,50]  # Total crop P demand                               

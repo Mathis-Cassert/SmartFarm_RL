@@ -3,7 +3,7 @@ import yaml
 
 from pcse.input import YAMLAgroManagementReader, YAMLCropDataProvider, NASAPowerWeatherDataProvider
 from pcse.input import WOFOST81SiteDataProvider_Classic, DummySoilDataProvider
-from utils.definition import ROOT_DIR
+from configs.definition import ROOT_DIR
 
 # Define the providers (crop, weather, soil, site, agro)
 PCSEProviders = tuple[

@@ -1,4 +1,5 @@
-# All Units For Use In Graphing Output From The Wofost Simulator 
+# All Units For Use In Graphing Output From The Wofost Simulator
+#FIXME: There is duplicata in names and verify info
 ---  
   #############################################################################**
   # Weather Variable States
@@ -215,11 +216,6 @@
   ACC:    'Acclimation Rate'
   HCR:    'Change in Acclimation'    
 
-  #*############################################################################**
-  #Respiration Dynamics States And Rates
-  #*############################################################################**
-  #*RATE VARIABLES:** (FOR OUTPUT TO OBSERVATION SPACE):
-  PMRES:      'Potential Maintenance Respiration Rate'          
 
   #*############################################################################**
   #Root Dynamics States And Rates
@@ -276,21 +272,7 @@
   NUPTAKETOTAL:         'Total N Uptake By The Crop'                     
   PUPTAKETOTAL:         'Total P Uptake By The Crop'                      
   KUPTAKETOTAL:         'Total K Uptake By The Crop'                     
-  NFIXTOTAL:            'Total N Fixated By The Crop'                       
-
-  NDEMANDST:            'N Demand In Living Stems'                       
-  NDEMANDRT:            'N Demand In Living Roots'                       
-  NDEMANDSO:            'N Demand In Storage Organs'                         
-
-  PDEMANDLV:            'P Demand In Living Leaves'                       
-  PDEMANDST:            'P Demand In Living Stems'                        
-  PDEMANDRT:            'P Demand In Living Roots'                           
-  PDEMANDSO:            'P Demand In Storage Organs'                       
-
-  KDEMANDLV:            'K Demand In Living Leaves'                      
-  KDEMANDST:            'K Demand In Living Stems'                       
-  KDEMANDRT:            'K Demand In Living Roots'                        
-  KDEMANDSO:            'K Demand In Storage Organs'                      
+  NFIXTOTAL:            'Total N Fixated By The Crop'
 
   #**RATE VARIABLES** (FOR OUTPUT TO OBSERVATION SPACE):
   RNUPTAKELV:      'Rate Of N Uptake In Leaves'                         
