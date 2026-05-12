@@ -3,6 +3,7 @@ test*
 *pkl
 *zip
 *npz
+*svg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
