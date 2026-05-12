@@ -18,7 +18,7 @@ assignees: Tenko2nd
 > 
 
 #### 🛠️ Implementation Strategy (The "How")
-*Technical thoughts: Which files to change? Which libraries to use? Any API changes?*
+*Technical thoughts: Which files to change? Which libraries to use?*
 - [ ] 
 - [ ] 
 
