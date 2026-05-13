@@ -13,10 +13,13 @@ from configs.gym_obs_act import ObservationFeature, OBSERVATION_BOUNDS, ActionFe
 
 
 class PCSEEnv(gym.Env):
-    def __init__(self, crop, weather, soil, site, agro, verbose: int=1):
+    def __init__(self, config, verbose: int=1):
         super(PCSEEnv, self).__init__()
 
+        self.config = config
+
         # Store the providers so we can recreate the engine on every reset
+        crop, weather, soil, site, agro = config.create_providers()
         self.crop_provider = crop
         self.weather_provider = weather
         self.soil_provider = soil
@@ -63,6 +66,13 @@ class PCSEEnv(gym.Env):
         self._prev_tagp = None
         self._stagnant_days = 0
 
+    def update_providers(self, crop, weather, soil, site, agro):
+        self.crop_provider = crop
+        self.weather_provider = weather
+        self.soil_provider = soil
+        self.site_provider = site
+        self.agro_management = agro
+
     #TODO: add environnmental changes
     def reset(self, seed=None, options=None):
         # Handle the random seed (required for Gymnasium)
@@ -74,6 +84,8 @@ class PCSEEnv(gym.Env):
         # Reset tracking variables for early termination
         self._prev_tagp = None
         self._stagnant_days = 0
+
+        self.update_providers(*self.config.randomize_all())
 
         # 1. Create a fresh ParameterProvider
         # This ensures any changes from the previous run are wiped clean

@@ -13,9 +13,6 @@ def make_gym_env(config: PCSEConfig = None, verbose: int = 1) -> PCSEEnv:
     :returns: an instance of PCSEEnv
     :rtype: PCSEEnv
     """
-    if config is None:
-        # Use default configuration for backward compatibility
-        config = PCSEConfig()
-    
-    crop, weather, soil, site, agro = config.create_providers()
-    return PCSEEnv(crop, weather, soil, site, agro, verbose=verbose)
+    config = PCSEConfig() if config is None else config
+
+    return PCSEEnv(config, verbose=verbose)
