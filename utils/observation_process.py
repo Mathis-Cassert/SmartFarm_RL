@@ -5,6 +5,7 @@ import numpy as np
 
 from configs.observation_noise_config import NoiseConfig
 from configs.gym_obs_act import ObservationFeature
+from utils.seed_utils import get_reset_seed
 
 
 def dict_to_array(obs_dict: Dict[ObservationFeature, float|int]) -> np.ndarray:
@@ -23,7 +24,8 @@ def dict_to_array(obs_dict: Dict[ObservationFeature, float|int]) -> np.ndarray:
 def apply_noise(
         observation: Dict[ObservationFeature, float | int],
         config: NoiseConfig,
-        observation_bounds: Dict[ObservationFeature, tuple[float, float]]
+        observation_bounds: Dict[ObservationFeature, tuple[float, float]],
+        reset_count: int = 0
 ) -> np.ndarray:
     """
     Applies per-feature noise to observations.
@@ -31,6 +33,7 @@ def apply_noise(
     :param observation: A dict with ObservationFeature keys
     :param config: NoiseConfig instance
     :param observation_bounds: Dict of (low, high) bounds for each feature
+    :param reset_count: Current reset counter for varying noise across resets
 
     :returns: Noisy observation as numpy array (clipped to valid range)
     """
@@ -45,6 +48,14 @@ def apply_noise(
 
     noisy_obs = obs_array.copy()
 
+    # Create a local random generator with varying seed based on reset count
+    if config.seed is not None:
+        # Combine base seed with reset count for varying but reproducible noise
+        noise_seed = get_reset_seed(config.seed, reset_count)
+        rng = np.random.RandomState(noise_seed)
+    else:
+        rng = np.random
+
     for feature, feature_config in config.feature_configs.items():
         idx = feature.value
 
@@ -55,9 +66,9 @@ def apply_noise(
             continue
 
         if feature_config.noise_type == "gaussian":
-            noise = np.random.normal(0, feature_config.std)
+            noise = rng.normal(0, feature_config.std)
         elif feature_config.noise_type == "uniform":
-            noise = np.random.uniform(-feature_config.std, feature_config.std)
+            noise = rng.uniform(-feature_config.std, feature_config.std)
         else:
             warnings.warn(f"Unknown/Unsupported noise type: {feature_config.noise_type}")
             continue

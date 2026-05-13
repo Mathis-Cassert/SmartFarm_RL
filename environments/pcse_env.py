@@ -25,6 +25,9 @@ class PCSEEnv(gym.Env):
 
         self.verbose = verbose
 
+        # Add reset counter for environmental variation
+        self.reset_counter = 0
+
         self.noise_config = NoiseConfig(
             enabled=True,
             feature_configs={
@@ -64,6 +67,9 @@ class PCSEEnv(gym.Env):
     def reset(self, seed=None, options=None):
         # Handle the random seed (required for Gymnasium)
         super().reset(seed=seed)
+
+        # Increment reset counter for environmental variation
+        self.reset_counter += 1
 
         # Reset tracking variables for early termination
         self._prev_tagp = None
@@ -105,7 +111,7 @@ class PCSEEnv(gym.Env):
         current_date = self.engine.day
         weather_at_date = self.weather_provider(current_date)
 
-        irrad = weather_at_date.IRRAD #TODO: Maybe lower the value for training current max = 40e6 (divide by 10e3 ?)
+        irrad = weather_at_date.IRRAD
         temp = weather_at_date.TEMP
         vap = weather_at_date.VAP #TODO: either use VAP or find a way to get RH
 
@@ -113,7 +119,6 @@ class PCSEEnv(gym.Env):
         co2 = self.site_provider["CO2"]
 
         # Build observation dict (order-independent)
-        #TODO: Research if float or int in PCSE
         obs_dict = {
             ObservationFeature.LAI: float(np.nan_to_num(lai)),
             ObservationFeature.TAGP: float(np.nan_to_num(tagp)),
@@ -121,11 +126,11 @@ class PCSEEnv(gym.Env):
             ObservationFeature.IRRAD: float(np.nan_to_num(irrad)),
             ObservationFeature.TEMP: float(np.nan_to_num(temp)),
             ObservationFeature.VAP: float(np.nan_to_num(vap)),
-            ObservationFeature.CO2: int(np.nan_to_num(co2)),
+            ObservationFeature.CO2: float(np.nan_to_num(co2)),
         }
 
         # Apply noise and convert to array
-        noisy_obs = apply_noise(obs_dict, self.noise_config, OBSERVATION_BOUNDS)
+        noisy_obs = apply_noise(obs_dict, self.noise_config, OBSERVATION_BOUNDS, reset_count=self.reset_counter)
         # Pre-normalize for stability
         normalized_obs = normalize_observation(noisy_obs, OBSERVATION_BOUNDS)
         return normalized_obs
