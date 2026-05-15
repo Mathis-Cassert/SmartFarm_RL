@@ -1,0 +1,18 @@
+---
+base:
+  rppo:
+    # NPK Soil Parameters
+    NAVAILI: 30
+    NSOILBASE: 30
+    NSOILBASE_FR: 0.002
+    BG_N_SUPPLY: 0.05
+    
+    # Site Dynamics Parameters
+    WAV: 5
+    SSMAX: 2
+    SSI: 0.5
+    NOTINF: 0.2
+    IFUNRN: 1
+    
+    # Atmospheric
+    CO2: 410

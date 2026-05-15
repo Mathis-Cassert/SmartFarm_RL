@@ -1,0 +1,11 @@
+---
+base:
+  rppo:
+    # Soil Dynamics Parameters
+    SMFCF: 0.42
+    SM0: 0.48
+    SMW: 0.18
+    RDMSOL: 60
+    CRAIRC: 0.05
+    SOPE: 5.0
+    KSUB: 3.0

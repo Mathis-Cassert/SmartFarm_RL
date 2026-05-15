@@ -4,6 +4,8 @@ from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.vec_env import VecEnv
 
 from utils.eval_utils import plot_evaluation_results, evaluate_model, initiate_eval_model
+from utils.seed_utils import set_all_seeds
+
 
 def visualize_saved_model(folder_name: str, use_log: bool = False, step: int = 0, verbose: int = 0) -> None:
     """
@@ -43,4 +45,5 @@ def visualize_current_model(model: BaseAlgorithm, env: VecEnv, model_folder: pat
     env.close()
 
 if __name__ == '__main__':
-    visualize_saved_model("20260512_143337_RecurrentPPO", use_log=True, step=15001)
+    set_all_seeds(None, set_cuda_deterministic=True)
+    visualize_saved_model("20260514_163148_RecurrentPPO", use_log=True, step=-1, verbose=2)

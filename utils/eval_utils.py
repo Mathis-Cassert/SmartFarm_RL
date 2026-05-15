@@ -136,7 +136,7 @@ def evaluate_model(model: BaseAlgorithm, env: VecEnv)\
 
     return history, eval_output_df, eval_summary_df
 
-
+# TODO: Add more information on the graph (e.g. tagp)
 def plot_evaluation_results(history: dict[str, list[float]], eval_output_df: pd.DataFrame, folder_path: pathlib.Path,
                             prefix: str = '') -> None:
     """Plot evaluation results comparing model output with optimal baseline.
