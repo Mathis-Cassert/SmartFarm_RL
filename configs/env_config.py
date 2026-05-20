@@ -33,22 +33,37 @@ TYPE_NAME: str = "rppo"
 # Realistic Soil Ranges (covers Sand to Clay)
 SOIL_RANGES_PARAMETER: dict[str, tuple[float, float]] = {
     "SMFCF": (0.100, 0.450),  # Field capacity (cm3/cm3)
-    "SM0": (0.350, 0.600),    # Porosity/Saturation (cm3/cm3)
+    "SM0": (0.320, 0.580),    # Porosity/Saturation (cm3/cm3)
     "SMW": (0.020, 0.250),    # Wilting point (cm3/cm3)
     "CRAIRC": (0.050, 0.100), # Critical air content (cm3/cm3)
-    "SOPE": (1.0, 100.0),     # Max percolation rate root zone (cm/day)
-    "KSUB": (1.0, 100.0),     # Max percolation rate subsoil (cm/day)
+    "SOPE": (0.1, 500.0),     # Max percolation rate root zone (cm/day)
+    "KSUB": (0.1, 500.0),     # Max percolation rate subsoil (cm/day)
     "RDMSOL": (40.0, 200.0),  # Maximum rootable depth (cm)
-    "K0": (1.0, 100.0),       # Saturated hydraulic conductivity (cm/day)
+    "K0": (0.1, 500.0),       # Saturated hydraulic conductivity (cm/day)
 }
 
 # Scalable Soil Archetypes (Position 0.0=Sand, 0.5=Loam, 1.0=Clay)
 # You can add as many intermediate points as you want here.
 SOIL_ARCHETYPES = [
-    (0.0, {"SMW": 0.04, "SMFCF": 0.11, "SM0": 0.39, "K0": 100.0, "CRAIRC": 0.09, "SOPE": 100.0}), # Sand
-    (0.5, {"SMW": 0.12, "SMFCF": 0.32, "SM0": 0.45, "K0": 15.0,  "CRAIRC": 0.07, "SOPE": 15.0}),  # Loam
+    (0.0, {"SMW": 0.04, "SMFCF": 0.11, "SM0": 0.38, "K0": 200.0, "CRAIRC": 0.09, "SOPE": 200.0}), # Sand
+    (0.5, {"SMW": 0.12, "SMFCF": 0.32, "SM0": 0.45, "K0": 20.0,  "CRAIRC": 0.07, "SOPE": 20.0}),  # Loam
     (1.0, {"SMW": 0.25, "SMFCF": 0.44, "SM0": 0.52, "K0": 1.0,   "CRAIRC": 0.05, "SOPE": 2.0}),   # Clay
 ]
+
+# Site Parameter Ranges based on WOFOST81SiteDataProvider_Classic defaults
+SITE_RANGES_PARAMETER: dict[str, tuple[float, float]] = {
+    "IFUNRN": (0, 1),           # Binary: 0 or 1
+    "NOTINF": (0.0, 1.0),       # Fraction of rain not-infiltrating [0-1]
+    "SSI": (0.0, 2.0),          # Initial surface storage [cm]
+    "SSMAX": (0.0, 3.0),        # Maximum surface storage [cm]
+    "WAV": (0.0, 100.0),        # Initial water availability [cm] (required)
+    "SMLIM": (0.0, 1.0),        # Initial max moisture in topsoil [0-1]
+    "CO2": (300.0, 1400.0),     # Atmospheric CO2 concentration [ppm] (required)
+    "BG_N_SUPPLY": (0.0, 0.1),  # Background N supply [kg/ha/day]
+    "NSOILBASE": (0.0, 100.0),  # Initial soil mineral N [kg/ha]
+    "NSOILBASE_FR": (0.025, 100.0), # Fraction of NSOILBASE in topsoil [0-100]
+    "NAVAILI": (0.0, 250.0),    # Initial N available in pool [kg/ha] (required)
+}
 
 
 # TODO: Create a base config class for futur implementation of both model 81 and 73
@@ -108,15 +123,15 @@ class PCSEConfig:
         # Create a soil based on the file if the parameter does not exist
         if self._soil is None:
             with open(SOIL_TRAIN_FILE_PATH, 'r') as f:
-                site_params = yaml.safe_load(f)
+                soil_params = yaml.safe_load(f)
 
-            site_type_params = site_params['base'][TYPE_NAME]
+            soil_type_params = soil_params['base'][TYPE_NAME]
 
             # Create custom soil data provider with autofill from ranges if values not in YAML
             self._soil = DummySoilDataProvider()
             for param, (min_val, max_val) in SOIL_RANGES_PARAMETER.items():
                 # Default behavior for initial creation
-                self._soil[param] = site_type_params.get(param, random.uniform(min_val, max_val))
+                self._soil[param] = soil_type_params.get(param, random.uniform(min_val, max_val))
             
             # Ensure physical consistency even for YAML-loaded soil if possible
             if 'SMW' in self._soil and 'SMFCF' in self._soil:
@@ -130,18 +145,7 @@ class PCSEConfig:
             site_type_params = site_params['base'][TYPE_NAME]
 
             # Create site data provider with N parameters (Wofost81)
-            self._site = WOFOST81SiteDataProvider_Classic(
-                WAV=site_type_params['WAV'],
-                CO2=site_type_params['CO2'],
-                NAVAILI=site_type_params['NAVAILI'],
-                NSOILBASE=site_type_params['NSOILBASE'],
-                NSOILBASE_FR=site_type_params['NSOILBASE_FR'],
-                BG_N_SUPPLY=site_type_params['BG_N_SUPPLY'],
-                SSMAX=site_type_params['SSMAX'],
-                SSI=site_type_params['SSI'],
-                NOTINF=site_type_params['NOTINF'],
-                IFUNRN=site_type_params['IFUNRN']
-            )
+            self.create_site(site_type_params)
 
         # Create a new agro management reader
         if self._agro is None:
@@ -225,13 +229,67 @@ class PCSEConfig:
         if self._soil['SMFCF'] >= self._soil['SM0']:
             self._soil['SM0'] = self._soil['SMFCF'] + 0.05
 
-        # 5. Handle non-texture parameters
+        # Handle non-texture parameters
         self._soil['RDMSOL'] = random.uniform(*SOIL_RANGES_PARAMETER['RDMSOL'])
-        self._soil['KSUB'] = self._soil['SOPE'] + random.uniform(-0.1, 0.1) # Usually follows percolation rate TODO research articles
+        
+        # Link Percolation to Conductivity: KSUB and SOPE follow K0
+        # These are physically capped by the saturated conductivity K0
+        self._soil['SOPE'] = self._soil['K0'] * random.uniform(0.8, 1.0)
+        self._soil['KSUB'] = self._soil['SOPE'] * random.uniform(0.8, 1.0)
 
-    def randomize_site_params(self):
-        """TODO: Randomize site parameters within valid ranges"""
-        pass
+
+    def create_site(self, param):
+        """
+        Create a site provider from a dictionary of parameters.
+        :param param: Dictionary of site parameters
+        """
+        # TODO: a name is not in param, use default values from 'RPPO_site.yaml'
+        self._site = WOFOST81SiteDataProvider_Classic(
+            WAV= param.get('WAV', 5),
+            CO2= param.get('CO2', 410),
+            NAVAILI= param.get('NAVAILI', 30),
+            NSOILBASE= param.get('NSOILBASE'),
+            NSOILBASE_FR= param.get('NSOILBASE_FR'),
+            BG_N_SUPPLY= param.get('BG_N_SUPPLY'),
+            SSMAX= param.get('SSMAX'),
+            SSI= param.get('SSI'),
+            NOTINF= param.get('NOTINF'),
+            IFUNRN= param.get('IFUNRN'),
+            SMLIM= param.get('SMLIM')
+        )
+
+    def randomize_site_params(self, soil=None) -> None:
+        """
+        Randomize site parameters within valid ranges.
+        Links WAV, SMLIM, and SSI to soil properties or logic.
+        """
+        random_params = {}
+        for param, (min_val, max_val) in SITE_RANGES_PARAMETER.items():
+            if param == "IFUNRN":
+                random_params[param] = random.randint(0, 1)
+            elif param == "SMLIM" and soil is not None:
+                # SMLIM should be near Field Capacity (SMFCF)
+                s_min = soil['SMW']
+                s_max = soil['SM0']
+                random_params[param] = random.uniform(
+                    max(s_min, soil['SMFCF'] - 0.05),
+                    min(s_max, soil['SMFCF'] + 0.05)
+                )
+            elif param == "WAV" and soil is not None:
+                # WAV = Fraction * Available Water Capacity * Depth
+                awc = (soil['SMFCF'] - soil['SMW']) * soil['RDMSOL']
+                random_params[param] = random.uniform(0.1, 1.0) * awc
+            elif param == "SSI":
+                # Initial storage must be <= Max storage (SSMAX), handled after the loop
+                continue 
+            else:
+                random_params[param] = random.uniform(min_val, max_val)
+
+        # Handle SSI linkage to SSMAX
+        random_params['SSI'] = random.uniform(0.0, random_params['SSMAX'])
+
+        # Update site provider
+        self.create_site(random_params)
 
 
     def randomize_all(self) -> PCSEProviders:
@@ -241,6 +299,6 @@ class PCSEConfig:
         """
         self.randomize_agro_year()
         self.randomize_soil_params()
-        self.randomize_site_params()
+        self.randomize_site_params(soil=self._soil)
 
         return self.get_agro_params()

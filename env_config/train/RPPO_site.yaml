@@ -10,9 +10,10 @@ base:
     # Site Dynamics Parameters
     WAV: 5
     SSMAX: 2
-    SSI: 0.5
+    SSI: 1
     NOTINF: 0.2
     IFUNRN: 1
+    SMLIM: 0.5
     
     # Atmospheric
     CO2: 410
