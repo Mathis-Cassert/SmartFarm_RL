@@ -3,7 +3,7 @@ name: Bug Report
 about: Correct a bug I encountered
 title: BUGGG
 labels: bug
-assignees: Tenko2nd
+assignees: Mathis-Cassert
 
 ---
 
