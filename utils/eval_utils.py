@@ -17,7 +17,7 @@ from utils.observation_process import denormalize_observation
 
 
 def initiate_eval_model(folder_name: str, use_log: bool = False, step: int = 0, verbose: int = 1)\
-        -> tuple[BaseAlgorithm, VecEnv, pathlib.Path]:
+        -> tuple[BaseAlgorithm, VecEnv, pathlib.Path, bool]:
     """
     Initiate the evaluation model by loading the environment and model.
     :param folder_name: Path to the folder containing the environment and model files
@@ -26,6 +26,7 @@ def initiate_eval_model(folder_name: str, use_log: bool = False, step: int = 0, 
     :param verbose: Verbosity level for the environment
     :return: Tuple of the model and the environment
     """
+    is_best = True
     if use_log:
         if step > 0:
             checkpoints_dir = LOG_DIR / folder_name / "checkpoints"
@@ -38,6 +39,7 @@ def initiate_eval_model(folder_name: str, use_log: bool = False, step: int = 0, 
                 model_path = LOG_DIR / folder_name / "best_model" / "best_model.zip"
             else:
                 model_path = checkpoints_dir / sorted(model_files)[0]
+                is_best = False
         elif step == -1:
             model_path = LOG_DIR / folder_name / "best_model" / "best_model.zip"
         else:
@@ -65,7 +67,7 @@ def initiate_eval_model(folder_name: str, use_log: bool = False, step: int = 0, 
 
     eval_model = RecurrentPPO.load(model_path, env=eval_env)
 
-    return eval_model, eval_env, model_folder
+    return eval_model, eval_env, model_folder, is_best
 
 
 def evaluate_model(model: BaseAlgorithm, env: VecEnv)\

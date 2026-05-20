@@ -17,13 +17,13 @@ def visualize_saved_model(folder_name: str, use_log: bool = False, step: int = 0
     :param verbose: Verbosity level for the environment (0=no output, 1=basic output, 2=debug output)
     """
     # Initiate evaluation model
-    model, env, model_folder = initiate_eval_model(folder_name, use_log=use_log, step=step, verbose=verbose)
+    model, env, model_folder, is_best = initiate_eval_model(folder_name, use_log=use_log, step=step, verbose=verbose)
 
     # Evaluate model
     history, eval_output_df, eval_summary_df = evaluate_model(model, env)
 
     # Plot evaluation results
-    plot_evaluation_results(history, eval_output_df, model_folder, prefix=str(step) if use_log else '')
+    plot_evaluation_results(history, eval_output_df, model_folder, prefix=str(step) if not is_best else '')
 
     # Close environments
     env.close()
